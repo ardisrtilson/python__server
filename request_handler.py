@@ -1,5 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from animals import get_all_animals, create_animal, get_single_animal
+from animals import get_all_animals, create_animal, get_single_animal, delete_animal, update_animal
+from employees import get_all_employees, create_employees, get_single_employees
+from locations import get_all_locations, create_locations, get_single_location
 import json
 
 # Here's a class. It inherits from another class.
@@ -49,6 +51,54 @@ class HandleRequests(BaseHTTPRequestHandler):
 
             self.wfile.write(response.encode())
 
+        if resource == "employees":
+            if id is not None:
+                response = f"{get_single_employees(id)}"
+
+            else:
+                response = f"{get_all_employees()}"
+
+            self.wfile.write(response.encode())
+
+        if resource == "locations":
+            if id is not None:
+                response = f"{get_single_location(id)}"
+
+            else:
+                response = f"{get_all_locations()}"
+
+            self.wfile.write(response.encode())
+
+    def do_DELETE(self):
+        # Set a 204 response code
+        self._set_headers(204)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        # Delete a single animal from the list
+        if resource == "animals":
+            delete_animal(id)
+
+        # Encode the new animal and send in response
+        self.wfile.write("".encode())
+
+    def do_PUT(self):
+        self._set_headers(204)
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        # Delete a single animal from the list
+        if resource == "animals":
+            update_animal(id, post_body)
+
+        # Encode the new animal and send in response
+        self.wfile.write("".encode())
+
     def do_POST(self):
         self._set_headers(201)
         content_len = int(self.headers.get('content-length', 0))
@@ -62,6 +112,8 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         # Initialize new animal
         new_animal = None
+        new_location = None
+        new_employee = None
 
         # Add a new animal to the list. Don't worry about
         # the orange squiggle, you'll define the create_animal
@@ -71,6 +123,18 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         # Encode the new animal and send in response
         self.wfile.write(f"{new_animal}".encode())
+
+        if resource == "employees":
+            new_employee = create_employees(post_body)
+
+        # Encode the new animal and send in response
+        self.wfile.write(f"{new_employee}".encode())
+
+        if resource == "locations":
+            new_location = create_locations(post_body)
+
+        # Encode the new animal and send in response
+        self.wfile.write(f"{new_location}".encode())
 
     def do_PUT(self):
         self.do_POST()
