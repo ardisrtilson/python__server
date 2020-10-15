@@ -57,7 +57,9 @@ CREATE TABLE `Employee` (
     `location_id` INTEGER NOT NULL,
     FOREIGN KEY(`location_id`) REFERENCES `Location`(`id`)
 
-);INSERT INTO `Animal` VALUES (null, "Daps", "Kennel", "Boxer", 2, 2);oyee` (
+);
+
+INSERT INTO `Animal` VALUES (null, "Daps", "Kennel", "Boxer", 2, 2)` (
 	`id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 	`name`	TEXT NOT NULL,
 	`address`	TEXT NOT NULL,
@@ -99,3 +101,5 @@ SELECT
     a.location_id
 FROM animal a
 WHERE a.id = 3
+
+SELECT * FROM Employee

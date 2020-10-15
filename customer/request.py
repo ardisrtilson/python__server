@@ -1,6 +1,8 @@
+from os import name
+import customer
 import sqlite3
 import json
-from models import Employee
+from models import Customer
 
 EMPLOYEES = [
     {
@@ -27,7 +29,7 @@ EMPLOYEES = [
 ]
 
 
-def get_all_employees():
+def get_all_customers():
 # Open a connection to the database
     with sqlite3.connect("./kennel.db") as conn:
 
@@ -41,8 +43,9 @@ def get_all_employees():
             a.id,
             a.name,
             a.address,
-            a.location_id
-        FROM Employee a
+            a.email,
+            a.password
+        FROM customer a
         """)
 
         # Initialize an empty list to hold all animal representations
@@ -52,20 +55,21 @@ def get_all_employees():
         dataset = db_cursor.fetchall()
 
         # Iterate list of data returned from database
-        for data in dataset:
+        for row in dataset:
 
             # Create an animal instance from the current row.
             # Note that the database fields are specified in
             # exact order of the parameters defined in the
             # Animal class above.
-            animal = Employee(data['id'], data['name'], data['address'], data['location_id'])
+            animal = Customer(row['id'], row['name'], row['address'],
+                            row['email'], row['password'])
 
-            animals.append(animal.__dict__)   
+            animals.append(animal.__dict__)
 
     # Use `json` package to properly serialize list as JSON
     return json.dumps(animals)
 
-def create_employees(employee):
+def create_customers(Customer):
     # Get the id value of the last animal in the list
     max_id = EMPLOYEES[-1]["id"]
 
@@ -73,16 +77,16 @@ def create_employees(employee):
     new_id = max_id + 1
 
     # Add an `id` property to the animal dictionary
-    employee["id"] = new_id
+    customer["id"] = new_id
 
     # Add the animal dictionary to the list
-    EMPLOYEES.append(employee)
+    EMPLOYEES.append(customer)
 
     # Return the dictionary with `id` property added
-    return employee
+    return customer
 
     # Function with a single parameter
-def get_single_employees(id):
+def get_single_customers(id):
      with sqlite3.connect("./kennel.db") as conn:
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
@@ -93,9 +97,11 @@ def get_single_employees(id):
         SELECT
             a.id,
             a.name,
-            a.address,
+            a.breed,
+            a.status,
+            a.customer_id,
             a.location_id
-        FROM employee a
+        FROM animal a
         WHERE a.id = ?
         """, ( id, ))
 
@@ -103,11 +109,13 @@ def get_single_employees(id):
         data = db_cursor.fetchone()
 
         # Create an animal instance from the current row
-        animal = Employee(data['id'], data['name'], data['address'], data['location_id'])
+        animal = Customer(data['name'], data['breed'], data['status'],
+                        data['location_id'], data['customer_id'],
+                        data['id'])
 
         return json.dumps(animal.__dict__)
 
-def update_employees(id, new_employee):
+def update_customers(id, new_employee):
     # Iterate the ANIMALS list, but use enumerate() so that
     # you can access the index value of each item.
         for index, employee in enumerate(EMPLOYEES):
@@ -116,7 +124,7 @@ def update_employees(id, new_employee):
                 EMPLOYEES[index] = new_employee
                 break
 
-def get_employees_by_location(location):
+def get_customers_by_email(email):
 
     with sqlite3.connect("./kennel.db") as conn:
         conn.row_factory = sqlite3.Row
@@ -124,19 +132,48 @@ def get_employees_by_location(location):
 
         # Write the SQL query to get the information you want
         db_cursor.execute("""
-        SELECT
-            a.id,
-            a.name,
-            a.address,
-            a.location_id
-        FROM employee a
-        WHERE a.location_id = ?
-        """, ( location, ))
+        select
+            c.id,
+            c.name,
+            c.address,
+            c.email,
+            c.password
+        from Customer c
+        WHERE c.email = ?
+        """, ( email, ))
 
         customers = []
         dataset = db_cursor.fetchall()
 
-        for data in dataset:
-            customer = Employee(data['id'], data['name'], data['address'], data['location_id'])
+        for row in dataset:
+            customer = Customer(row['id'], row['name'], row['address'], row['email'] , row['password'])
             customers.append(customer.__dict__)
-        return json.dumps(customers)      
+
+    return json.dumps(customers)
+
+def get_customers_by_name(name):
+
+    with sqlite3.connect("./kennel.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        # Write the SQL query to get the information you want
+        db_cursor.execute("""
+        select
+            c.id,
+            c.name,
+            c.address,
+            c.email,
+            c.password
+        from Customer c
+        WHERE c.password = ?
+        """, ( name, ))
+
+        customers = []
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            customer = Customer(row['id'], row['name'], row['address'], row['email'] , row['password'])
+            customers.append(customer.__dict__)
+
+    return json.dumps(customers)

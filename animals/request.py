@@ -1,3 +1,4 @@
+from models import location
 import sqlite3
 import json
 from models import Animal
@@ -104,19 +105,13 @@ def get_single_animal(id):
     return requested_animal
 
 def delete_animal(id):
-    # Initial -1 value for animal index, in case one isn't found
-    animal_index = -1
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    # Iterate the ANIMALS list, but use enumerate() so that you
-    # can access the index value of each item
-    for index, animal in enumerate(ANIMALS):
-        if animal["id"] == id:
-            # Found the animal. Store the current index.
-            animal_index = index
-
-    # If the animal was found, use pop(int) to remove it from list
-    if animal_index >= 0:
-        ANIMALS.pop(animal_index)
+        db_cursor.execute("""
+        DELETE FROM animal
+        WHERE id = ?
+        """, (id, ))
 
 def update_animal(id, new_animal):
     # Iterate the ANIMALS list, but use enumerate() so that
@@ -155,3 +150,58 @@ def get_single_animal(id):
                         data['id'])
 
         return json.dumps(animal.__dict__)
+
+def get_animals_by_location(location):
+
+    with sqlite3.connect("./kennel.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        # Write the SQL query to get the information you want
+        db_cursor.execute("""
+        select
+            c.id,
+            c.name,
+            c.breed,
+            c.status,
+            c.location_id,
+            c.customer_id
+        from Animal c
+        WHERE c.location_id = ?
+        """, ( location, ))
+
+        customers = []
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            customer = Animal(row['id'], row['name'], row['breed'], row['status'] , row['location_id'],  row['customer_id'])
+            customers.append(customer.__dict__)
+        return json.dumps(customers)
+
+
+def get_animals_by_status(status):
+
+    with sqlite3.connect("./kennel.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+
+        # Write the SQL query to get the information you want
+        db_cursor.execute("""
+        select
+            c.id,
+            c.name,
+            c.breed,
+            c.status,
+            c.location_id,
+            c.customer_id
+        from Animal c
+        WHERE c.status = ?
+        """, ( status, ))
+
+        customers = []
+        dataset = db_cursor.fetchall()
+
+        for row in dataset:
+            customer = Animal(row['id'], row['name'], row['breed'], row['status'] , row['location_id'],  row['customer_id'])
+            customers.append(customer.__dict__)
+        return json.dumps(customers)
