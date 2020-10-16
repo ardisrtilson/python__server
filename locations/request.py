@@ -2,31 +2,6 @@ import sqlite3
 import json
 from models import Location
 
-LOCATIONS = [
-    {
-        "id": 1,
-        "name": "Snickers",
-        "species": "Dog",
-        "locationId": 1,
-        "customerId": 4
-    },
-    {
-        "id": 2,
-        "name": "Gypsy",
-        "species": "Dog",
-        "locationId": 1,
-        "customerId": 2
-    },
-    {
-        "id": 3,
-        "name": "Blue",
-        "species": "Cat",
-        "locationId": 2,
-        "customerId": 1
-    }
-]
-
-
 def get_all_locations():
 # Open a connection to the database
     with sqlite3.connect("./kennel.db") as conn:
@@ -40,15 +15,12 @@ def get_all_locations():
         SELECT
             a.id,
             a.name,
-            a.breed,
-            a.status,
-            a.customer_id,
-            a.location_id
-        FROM animal a
+            a.address
+        FROM Location a
         """)
 
         # Initialize an empty list to hold all animal representations
-        animals = []
+        locations = []
 
         # Convert rows of data into a Python list
         dataset = db_cursor.fetchall()
@@ -60,30 +32,12 @@ def get_all_locations():
             # Note that the database fields are specified in
             # exact order of the parameters defined in the
             # Animal class above.
-            animal = Location(row['id'], row['name'], row['breed'],
-                            row['status'], row['location_id'],
-                            row['customer_id'])
+            location = Location(row['id'], row['name'], row['address'])
 
-            animals.append(animal.__dict__)
+            locations.append(location.__dict__)
 
     # Use `json` package to properly serialize list as JSON
-    return json.dumps(animals)
-
-def create_locations(location):
-    # Get the id value of the last animal in the list
-    max_id = LOCATIONS[-1]["id"]
-
-    # Add 1 to whatever that number is
-    new_id = max_id + 1
-
-    # Add an `id` property to the animal dictionary
-    location["id"] = new_id
-
-    # Add the animal dictionary to the list
-    LOCATIONS.append(location)
-
-    # Return the dictionary with `id` property added
-    return location
+    return json.dumps(locations)
 
     # Function with a single parameter
 def get_single_location(id):
@@ -97,11 +51,8 @@ def get_single_location(id):
         SELECT
             a.id,
             a.name,
-            a.breed,
-            a.status,
-            a.customer_id,
-            a.location_id
-        FROM animal a
+            a.address
+        FROM Location a
         WHERE a.id = ?
         """, ( id, ))
 
@@ -109,17 +60,15 @@ def get_single_location(id):
         data = db_cursor.fetchone()
 
         # Create an animal instance from the current row
-        animal = Location(data['name'], data['breed'], data['status'],
-                        data['location_id'], data['customer_id'],
-                        data['id'])
+        location = Location(data['id'], data['name'], data['address'])
 
-        return json.dumps(animal.__dict__)
+        return json.dumps(location.__dict__)
 
-def update_location(id, new_location):
-    # Iterate the ANIMALS list, but use enumerate() so that
-    # you can access the index value of each item.
-        for index, location in enumerate(LOCATIONS):
-            if location["id"] == id:
-                # Found the animal. Update the value.
-                LOCATIONS[index] = new_location
-                break
+def delete_location(id):
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        DELETE FROM Location
+        WHERE id = ?
+        """, (id, ))

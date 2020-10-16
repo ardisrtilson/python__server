@@ -1,8 +1,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from animals import get_all_animals, create_animal, get_single_animal, delete_animal, update_animal, get_animals_by_location, get_animals_by_status
-from employees import get_all_employees, create_employees, get_single_employees, update_employees, get_employees_by_location
-from locations import get_all_locations, create_locations, get_single_location
-from customer import get_all_customers, create_customers, get_single_customers, update_customers, get_customers_by_email, get_customers_by_name
+from animals import get_all_animals, get_single_animal, delete_animal, get_animals_by_location, get_animals_by_status, update_animal, create_animal
+from employees import get_all_employees, get_single_employee, get_employee_by_location, delete_employee
+from locations import get_all_locations, get_single_location, delete_location
+from customers import get_all_customers, get_single_customer, get_customer_by_email, get_customer_by_name, delete_customer
 import json
 
 # Here's a class. It inherits from another class.
@@ -43,6 +43,13 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
 
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
+        self.end_headers()
+
     # Here's a method on the class that overrides the parent's method.
     # It handles any GET request.
     def do_GET(self):
@@ -66,17 +73,21 @@ class HandleRequests(BaseHTTPRequestHandler):
                     response = f"{get_all_animals()}"
             elif resource == "customers":
                 if id is not None:
-                    response = f"{get_single_customers(id)}"
+                    response = f"{get_single_customer(id)}"
                 else:
                     response = f"{get_all_customers()}"
-            elif resource == "employee":
+            elif resource == "employees":
                 if id is not None:
-                    response = f"{get_single_employees(id)}"
+                    response = f"{get_single_employee(id)}"
                 else:
                     response = f"{get_all_employees()}"
-        # Response from parse_url() is a tuple with 3
-        # items in it, which means the request was for
-        # `/resource?parameter=value`
+
+            elif resource == "locations":
+                if id is not None:
+                    response = f"{get_single_location(id)}"
+                else:
+                    response = f"{get_all_locations()}"
+
         elif len(parsed) == 3:
             ( resource, key, value ) = parsed
 
@@ -84,16 +95,16 @@ class HandleRequests(BaseHTTPRequestHandler):
             # query parameter that specified the customer
             # email as a filtering value?
             if key == "email" and resource == "customers":
-                response = get_customers_by_email(value)
+                response = get_customer_by_email(value)
 
             if key == "name" and resource == "customers":
-                response = get_customers_by_name(value)
+                response = get_customer_by_name(value)
 
             if key == "location_id" and resource == "animals":
                 response = get_animals_by_location(value)
 
             if key == "location_id" and resource == "employee":
-                response = get_employees_by_location(value)
+                response = get_employee_by_location(value)
 
             if key == "status" and resource == "animals":
                 response = get_animals_by_status(value)
@@ -110,6 +121,12 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Delete a single animal from the list
         if resource == "animals":
             delete_animal(id)
+        if resource == "locations":
+            delete_location(id)
+        if resource == "customers":
+            delete_customer(id)
+        if resource == "employees":
+            delete_employee(id)
 
         # Encode the new animal and send in response
         self.wfile.write("".encode())
@@ -123,12 +140,8 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
-        # Delete a single animal from the list
         if resource == "animals":
-            update_animal(id, post_body)
-
-        if resource == "employees":
-            update_employees(id, post_body)
+            update_animal(id)
 
         # Encode the new animal and send in response
         self.wfile.write("".encode())
@@ -152,23 +165,18 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Add a new animal to the list. Don't worry about
         # the orange squiggle, you'll define the create_animal
         # function next.
-        if resource == "animals":
-            new_animal = create_animal(post_body)
-
+ 
         # Encode the new animal and send in response
         self.wfile.write(f"{new_animal}".encode())
-
-        if resource == "employees":
-            new_employee = create_employees(post_body)
 
         # Encode the new animal and send in response
         self.wfile.write(f"{new_employee}".encode())
 
-        if resource == "locations":
-            new_location = create_locations(post_body)
-
         # Encode the new animal and send in response
         self.wfile.write(f"{new_location}".encode())
+
+        if resource == "animals":
+            new_animal = create_animal(post_body)
 
     def do_PUT(self):
         self.do_POST()
