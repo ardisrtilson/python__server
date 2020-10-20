@@ -1,8 +1,7 @@
-from models import location
 import sqlite3
 import json
 from models import Animal
-
+from models import Location
 def get_all_animals():
     with sqlite3.connect("./kennel.db") as conn:
 
@@ -15,9 +14,13 @@ def get_all_animals():
             a.name,
             a.breed,
             a.status,
+            a.location_id,
             a.customer_id,
-            a.location_id
-        FROM animal a
+            l.name location_name,
+            l.address location_address
+        FROM Animal a
+        JOIN Location l
+            ON l.id = a.location_id
         """)
 
         animals = []
@@ -25,13 +28,20 @@ def get_all_animals():
 
         for row in dataset:
 
-            animal = Animal(row['id'], row['name'], row['breed'],
-                            row['status'], row['location_id'],
-                            row['customer_id'])
+            # Create an animal instance from the current row
+            animal = Animal(row['name'], row['breed'], row['status'],
+                            row['location_id'], row['customer_id'], row['id'])
 
+            # Create a Location instance from the current row
+            location = Location(row['id'], row['location_name'], row['location_address'])
+
+            # Add the dictionary representation of the location to the animal
+            animal.location = location.__dict__
+
+            # Add the dictionary representation of the animal to the list
             animals.append(animal.__dict__)
 
-    return json.dumps(animals)
+            return json.dumps(animals)
 
 def get_single_animal(id):
      with sqlite3.connect("./kennel.db") as conn:
@@ -159,7 +169,7 @@ def create_animal(new_animal):
             ( ?, ?, ?, ?, ?);
         """, (new_animal['name'], new_animal['breed'],
               new_animal['status'], new_animal['location_id'],
-              new_animal['customer_id'], ))
+              new_animal['customer_id'] ))
 
         # The `lastrowid` property on the cursor will return
         # the primary key of the last thing that got added to

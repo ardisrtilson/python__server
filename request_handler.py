@@ -159,24 +159,15 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         # Initialize new animal
         new_animal = None
-        new_location = None
-        new_employee = None
 
         # Add a new animal to the list. Don't worry about
         # the orange squiggle, you'll define the create_animal
         # function next.
- 
-        # Encode the new animal and send in response
-        self.wfile.write(f"{new_animal}".encode())
-
-        # Encode the new animal and send in response
-        self.wfile.write(f"{new_employee}".encode())
-
-        # Encode the new animal and send in response
-        self.wfile.write(f"{new_location}".encode())
-
         if resource == "animals":
             new_animal = create_animal(post_body)
+
+        # Encode the new animal and send in response
+            self.wfile.write(f"{new_animal}".encode())
 
     def do_PUT(self):
         self.do_POST()
